@@ -1,0 +1,10 @@
+{
+  "version": true,
+  "deepseek_api_option": true,
+  "deepseek_web_option": true,
+  "handoff_url_storage": true,
+  "deepseek_provider_file": true,
+  "gateway_deepseek": true,
+  "no_deepseek_secret_browser": true,
+  "js_syntax": true
+}

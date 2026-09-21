@@ -1,0 +1,13 @@
+{
+  "version": true,
+  "provider_selector": true,
+  "provider_admin": true,
+  "gateway_function": true,
+  "openai_adapter": true,
+  "anthropic_adapter": true,
+  "gemini_adapter": true,
+  "secret_not_in_browser": true,
+  "supabase_url_retained": true,
+  "site_url_configured": true,
+  "js_syntax": true
+}

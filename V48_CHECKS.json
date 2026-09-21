@@ -1,0 +1,10 @@
+{
+  "version": true,
+  "web_ai_buttons": true,
+  "analysis_mode": true,
+  "research_prompt_file": true,
+  "sanity_guard": true,
+  "web_urls_admin": true,
+  "future_edge_v48": true,
+  "js_syntax": true
+}

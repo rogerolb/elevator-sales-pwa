@@ -1,0 +1,6 @@
+{
+  "version": true,
+  "deepseek_target": true,
+  "web_handoff": true,
+  "js_syntax": true
+}

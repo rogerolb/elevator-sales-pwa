@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#123a63"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="EV Sales"><title>Elevator Sales Intelligence v4.7</title>
+<meta name="theme-color" content="#123a63"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="EV Sales"><title>Elevator Sales Intelligence v4.9</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{--navy:#123a63;--blue:#1f5f99;--bg:#f4f7fa;--card:#fff;--text:#18212b;--muted:#667789;--line:#d9e1e8;--green:#1e7a46;--amber:#9a6a00;--red:#a12d2d}
@@ -355,6 +355,17 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 .ai46-off{color:#68727c;font-weight:800}
 @media(max-width:520px){.ai46-status-grid{grid-template-columns:1fr}.ai46-provider{grid-template-columns:1fr}}
 
+
+/* v4.8 Web AI handoff + estimation prompt */
+.ai48-mode{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:9px 0;padding:9px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.ai48-mode select{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;color:var(--navy)}
+.ai48-webbox{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:12px;background:#f8fbfd}
+.ai48-webbuttons{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
+.ai48-webbuttons button{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:9px;padding:9px;font-weight:800;cursor:pointer}
+.ai48-admin-row{display:grid;grid-template-columns:120px 1fr auto;gap:7px;align-items:center;margin:7px 0}
+.ai48-admin-row input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:8px}
+@media(max-width:620px){.ai48-webbuttons{grid-template-columns:repeat(2,1fr)}.ai48-mode{grid-template-columns:1fr}.ai48-admin-row{grid-template-columns:1fr}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app_config.js"></script>
@@ -517,7 +528,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 </div></section>
 
 <section id="aiProviderAdmin"><button class="back" onclick="go('admin')">← 管理</button>
-<div class="panel"><h2>AIプロバイダー v4.7</h2><div id="aiProviderAdminBody"></div></div>
+<div class="panel"><h2>AIプロバイダー v4.9</h2><div id="aiProviderAdminBody"></div></div>
 </section>
 
 <section id="apiStatusAdmin"><button class="back" onclick="go('admin')">← 管理</button>
@@ -623,7 +634,12 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 <div class="meta">参照する情報を選んで、そのまま質問します。</div>
 <div class="ai46-provider"><div><b>使用AI</b><div class="ai46-meta">「自動」はSupabase側の既定AIを使用します。</div></div>
 <select id="aiProviderSelect46" onchange="saveAiProvider46(this.value)">
-<option value="auto">自動</option><option value="openai">OpenAI</option><option value="anthropic">Claude</option><option value="gemini">Gemini</option><option value="deepseek">DeepSeek API</option><option value="deepseek_web">DeepSeek 指定チャット</option>
+<option value="auto">自動</option><option value="openai">OpenAI API</option><option value="anthropic">Claude API</option><option value="gemini">Gemini API</option><option value="deepseek">DeepSeek API</option>
+</select></div>
+<div class="ai48-mode"><div><b>分析モード</b><div class="ai46-meta">台数推定では検索プロンプト v2.6 を自動付与します。</div></div>
+<select id="aiModeSelect48" onchange="saveAiMode48(this.value)">
+<option value="normal">通常会話</option>
+<option value="estimation">台数推定・削減効果 v2.6</option>
 </select></div>
 <div id="aiActiveContext42" class="context42">参照中の物件なし</div>
 <div class="ai-contexts">
@@ -634,9 +650,20 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 </div>
 <div class="ai-prompt-chips">
  <button onclick="fillAiPrompt('この物件で最初に確認すべきことは？')">最初に確認</button>
- <button onclick="fillAiPrompt('この物件のEV台数をどう見ますか？')">EV台数</button>
+ <button onclick="setAiEstimation48('この物件のEV・ES・DW台数と削減効果を推定して')">EV/ES/DW台数</button>
  <button onclick="fillAiPrompt('競合保守会社と比べた営業トークを作って')">営業トーク</button>
  <button onclick="fillAiPrompt('更新提案のタイミングを整理して')">更新提案</button>
+</div>
+<div class="ai48-webbox">
+ <b>Web AIへ引き継ぐ</b>
+ <div class="meta">API料金なし。質問・物件情報・選択中の検索プロンプトをコピーしてWebアプリを開きます。</div>
+ <div class="meta">DeepSeek既定先：共有チャットURL（管理画面から変更可）</div>
+ <div class="ai48-webbuttons">
+  <button onclick="webAiHandoff48('chatgpt')">ChatGPT</button>
+  <button onclick="webAiHandoff48('gemini')">Gemini</button>
+  <button onclick="webAiHandoff48('claude')">Claude</button>
+  <button onclick="webAiHandoff48('deepseek')">DeepSeek</button>
+ </div>
 </div>
 <div id="aiShellConversation"><div class="chat">DB横断AIの会話エリアです。本番API接続前でも画面・導線を確認できます。</div></div>
 <div class="search"><input id="aiShellInput" placeholder="例：この物件で何を話せばいい？"><button class="btn" onclick="sendAiShell()">送信</button></div>
@@ -730,39 +757,75 @@ async function initAiProviderAdmin46(){
  <div class="cloud43-email"><input id="deepSeekChatUrl47" placeholder="https://chat.deepseek.com/..." value="${esc(getDeepSeekChatUrl47())}"><button class="btn" onclick="saveDeepSeekChatUrl47(document.getElementById('deepSeekChatUrl47').value);alert('保存しました')">URL保存</button></div>
  <div class="note">このURLは端末内だけに保存します。APIなしの場合、質問文をコピーして指定チャットを開く方式です。Webチャットへの自動送信は行いません。</div>
  <div class="note">AIキーはブラウザに保存しません。Supabase Edge Function Secretsだけで管理します。</div>
+ <div class="v25-sub">Web AIリンク</div>
+ ${webAiAdminRows48()}
+ <div class="note">指定チャットURLも登録できます。質問の自動投稿はせず、プロンプトをコピーしてWebアプリを開きます。</div>
  </div>`;
 }
 
 
-const AI47_DEEPSEEK_CHAT_URL_KEY='evSalesDeepSeekChatUrlV47';
-function getDeepSeekChatUrl47(){try{return localStorage.getItem(AI47_DEEPSEEK_CHAT_URL_KEY)||''}catch(e){return ''}}
-function saveDeepSeekChatUrl47(v){try{localStorage.setItem(AI47_DEEPSEEK_CHAT_URL_KEY,String(v||'').trim())}catch(e){}}
-function buildDeepSeekHandoffPrompt47(q,contexts,ctx){
+
+const AI48_MODE_KEY='evSalesAiModeV48';
+const AI48_WEB_URLS_KEY='evSalesWebAiUrlsV48';
+const AI48_RESEARCH_PROMPT="# 役割\nあなたは「日本国内の昇降機（エレベーター・エスカレーター・小荷物昇降機）の台数推定アナリスト」です。\n\n# 目的\n保守営業が予測を持ち、削減目安を持って提案できるようにすること。\n\n# 対象\n指定された地域・用途・建物種別、または企業名・法人名・施設名における昇降機の推定台数を、以下の3分類で算出すること。\n- エレベーター（EV）\n- エスカレーター（ES）\n- 小荷物昇降機（DW）\n\n# 出力フォーマット\n必ず以下の形式を基本とすること。\n\n法人名：●\n拠点名①：EV●～●台・ES●～●台・DW●～●台\n拠点名②：EV●～●台・ES●～●台・DW●～●台\n拠点名③：EV●～●台・ES●～●台・DW●～●台\n合計：EV●～●台・ES●～●台・DW●～●台\n\n削減効果（保守）\n　年間：●万円\n　10年：●万円\n\n削減効果（リニューアル実施）\n　年間：●万円\n\n※台数は最小～最大のレンジで示し、削減効果は中央値で算出する。\n※確定値が入手できた場合は、その値を優先し、備考に「確定」と明記する。\n※対象が単一施設で法人名が特定できない場合は「法人名：不明」とする。\n\n# 算出基準（保守削減：月額×12ヶ月）\n- EV：5.0→2.5万円／月 → 年間30.0万円削減／台\n- ES：8.0→4.0万円／月 → 年間48.0万円削減／台\n- DW：2.0→1.0万円／月 → 年間12.0万円削減／台\n\n# 算出基準（リニューアル実施：年間削減額）\n- EV：2000→1000万円／年 → 年間1,000万円削減／台\n- DW：1000→500万円／年 → 年間500万円削減／台\n- ES：単価未定義のため原則計上しない\n\n# 必ず含める4項目\n① 推定台数\n② 推定根拠\n③ 誤差要因\n④ 追加で必要なデータ\n\n# 推定の進め方\n1. 企業・法人の拠点リストを作成する（有報、公式サイト、登記情報など）。\n2. 各拠点の建物用途・規模・階数を推定する。\n3. 公開情報（公式フロアマップ、バリアフリーマップ、物件情報、管理台帳など）を確認する。\n4. 一次情報（公式フロアマップ、管理台帳、保守契約書、メーカー公表設備事例）を最優先する。\n5. 二次情報や検索スニペットのみで「0台」と断定しない。データの目的・特性を考慮する。\n6. 大型商業施設・病院・大学などは物理的・業界的なサニティチェックを行う。ただしサニティチェックは公式・実測値を上書きせず、矛盾時は「再調査フラグ」とする。\n7. 確定値が得られた場合は、その値を採用し、推定レンジを更新する。\n\n# 情報状態\n数値は可能な限り以下を区別する。\n- 確認実数\n- 公開下限\n- 法定最低\n- 推定\n- 不明\n\n# 出典確度\n- A：行政資料、施設設備一覧、メーカー公表設備事例、保守契約書など\n- B：施設公式サイト、公式フロアマップ、公式バリアフリー資料\n- C：係数、類似事例、参考Web、AI推論\n\n# EVの数え方\n- 非常用仕様EVは物理総台数への加算ではなく内数。二重計上しない。\n- 公式マップのEV記号は、シャフト・バンク・個別号機を確認するまで「記号数＝物理台数」としない。\n- 公式マップが全設備を網羅すると確認できない場合、見える台数は「公開下限」とする。\n\n# DW\n- 公開情報が乏しい場合は「不明」または「推定」とし「要ヒアリング」を付ける。\n\n# 注意事項\n- 公式データがないからといって保守的になりすぎず、透明性の高い前提を置いてレンジを出す。\n- ただし空欄を埋めるために数字を創作しない。\n- 誤差要因と追加データを必ず明示する。\n- ユーザーから訂正があった場合は分析を修正し、誤判断の原因と再発防止策を述べる。\n";
+
+function getAiMode48(){try{return localStorage.getItem(AI48_MODE_KEY)||'normal'}catch(e){return 'normal'}}
+function saveAiMode48(v){try{localStorage.setItem(AI48_MODE_KEY,v||'normal')}catch(e){}}
+function initAiMode48(){const el=document.getElementById('aiModeSelect48');if(el)el.value=getAiMode48()}
+function setAiEstimation48(text){saveAiMode48('estimation');initAiMode48();fillAiPrompt(text)}
+
+function defaultWebAiUrls48(){
+ return {
+   chatgpt:'https://chatgpt.com/',
+   gemini:'https://gemini.google.com/app',
+   claude:'https://claude.ai/',
+   deepseek:'https://chat.deepseek.com/share/172y2scizpo2gdpp8j'
+ };
+}
+function getWebAiUrls48(){
+ try{return {...defaultWebAiUrls48(),...JSON.parse(localStorage.getItem(AI48_WEB_URLS_KEY)||'{}')}}catch(e){return defaultWebAiUrls48()}
+}
+function saveWebAiUrl48(provider,value){
+ const urls=getWebAiUrls48();urls[provider]=String(value||'').trim()||defaultWebAiUrls48()[provider];
+ try{localStorage.setItem(AI48_WEB_URLS_KEY,JSON.stringify(urls))}catch(e){}
+ alert('保存しました');
+}
+function webAiName48(p){return ({chatgpt:'ChatGPT',gemini:'Gemini',claude:'Claude',deepseek:'DeepSeek'})[p]||p}
+function webAiAdminRows48(){
+ const u=getWebAiUrls48();
+ return ['chatgpt','gemini','claude','deepseek'].map(p=>`<div class="ai48-admin-row"><b>${webAiName48(p)}</b><input id="webAiUrl48_${p}" value="${esc(u[p]||'')}" placeholder="${esc(defaultWebAiUrls48()[p])}"><button class="btn" onclick="saveWebAiUrl48('${p}',document.getElementById('webAiUrl48_${p}').value)">保存</button></div>`).join('');
+}
+function buildAiHandoffPrompt48(q,contexts,ctx){
+ const base=[
+   `質問: ${q}`,
+   `参照カテゴリ: ${contexts.join(' / ')||'指定なし'}`,
+   `物件コンテキスト: ${JSON.stringify(ctx||{})}`
+ ].join('\n');
+ if(getAiMode48()==='estimation'){
+   return `${AI48_RESEARCH_PROMPT}\n\n# 今回の質問\n${base}`;
+ }
  return [
    '以下はエレベーター営業支援の相談です。',
    '事実・推定・不明を分け、推定には（推定）を付けてください。',
    '',
-   `質問: ${q}`,
-   `参照カテゴリ: ${contexts.join(' / ')||'指定なし'}`,
-   `物件コンテキスト: ${JSON.stringify(ctx||{})}`,
+   base,
    '',
-   '回答は「確認できていること」「推定」「営業上の次の一手」に分けてください。'
+   '回答は必要に応じて「確認できていること」「推定」「営業上の次の一手」に分けてください。'
  ].join('\n');
 }
-async function deepSeekWebHandoff47(q,contexts,ctx,conv){
- const url=getDeepSeekChatUrl47();
- if(!url){
-   conv.innerHTML+=`<div class="chat"><b>DeepSeek指定チャット未設定</b><br><span class="meta">管理 → AIプロバイダー でDeepSeekチャットURLを登録してください。</span></div>`;
-   return;
- }
- const prompt=buildDeepSeekHandoffPrompt47(q,contexts,ctx);
- try{
-   await navigator.clipboard.writeText(prompt);
-   window.open(url,'_blank','noopener,noreferrer');
-   conv.innerHTML+=`<div class="chat"><b>DeepSeekへ引き継ぎ</b><br>質問文をコピーして指定チャットを開きました。DeepSeek側で貼り付けて送信してください。</div>`;
- }catch(e){
-   conv.innerHTML+=`<div class="chat"><b>DeepSeekへ引き継ぎ</b><br>指定チャットを開きます。下の質問文をコピーして送信してください。<br><br>${esc(prompt).replace(/\n/g,'<br>')}</div>`;
-   window.open(url,'_blank','noopener,noreferrer');
+async function webAiHandoff48(provider){
+ const input=document.getElementById('aiShellInput'),conv=document.getElementById('aiShellConversation');
+ const q=(input?.value||'').trim();
+ if(!q){alert('先に質問を入力してください');return}
+ const contexts=[...document.querySelectorAll('[data-ai-context].selected')].map(x=>x.dataset.aiContext);
+ const prompt=buildAiHandoffPrompt48(q,contexts,getCross42Context());
+ const url=getWebAiUrls48()[provider]||defaultWebAiUrls48()[provider];
+ let copied=false;
+ try{await navigator.clipboard.writeText(prompt);copied=true}catch(e){}
+ window.open(url,'_blank','noopener,noreferrer');
+ if(conv){
+   conv.innerHTML+=`<div class="chat"><b>${esc(webAiName48(provider))}へ引き継ぎ</b><br>${copied?'質問文をコピーしてWebアプリを開きました。貼り付けて送信してください。':'Webアプリを開きました。下の質問文をコピーして送信してください。<br><br>'+esc(prompt).replace(/\n/g,'<br>')}</div>`;
+   conv.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
  }
 }
 
@@ -772,13 +835,6 @@ async function sendAiShell(){
  const contexts=[...document.querySelectorAll('[data-ai-context].selected')].map(x=>x.dataset.aiContext);
  conv.innerHTML+=`<div class="chat" style="background:#fff"><b>質問</b><br>${esc(q)}</div>`;
  input.value='';
- const selectedProvider=getAiProvider46();
- if(selectedProvider==='deepseek_web'){
-   await deepSeekWebHandoff47(q,contexts,getCross42Context(),conv);
-   input.value='';
-   conv.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
-   return;
- }
  const direct=api42Endpoint('aiEndpoint'), fn=backend44FunctionName('ai');
  if(!direct&&!fn){
   conv.innerHTML+=`<div class="chat"><b>AI接続前</b><br>参照予定：${contexts.length?contexts.map(esc).join(' / '):'指定なし'}<br><span class="meta">本番API接続後、ここに回答を表示します。</span></div>`;
@@ -786,7 +842,7 @@ async function sendAiShell(){
  }
  const wait=document.createElement('div');wait.className='chat';wait.textContent='AI回答中...';conv.appendChild(wait);
  try{
-  const x=await backend44Json('ai',{action:'ask',question:q,contexts,activeProperty:getCross42Context(),provider:getAiProvider46()});
+  const x=await backend44Json('ai',{action:'ask',question:q,contexts,activeProperty:getCross42Context(),provider:getAiProvider46(),analysisMode:getAiMode48(),researchPromptVersion:'2.6'});
   const who=aiProviderLabel46(x.provider||getAiProvider46()), model=x.model?` / ${esc(x.model)}`:'';
   wait.innerHTML=`<b>AI <span class="ai46-badge">${esc(who)}${model}</span></b><br>${esc(x.answer||x.text||'回答なし').replace(/\n/g,'<br>')}`;
  }catch(e){wait.innerHTML=`<b>AI接続エラー</b><br>${esc(e.message)}`}
@@ -807,7 +863,7 @@ function updateHomeShellCounts(){
    updateHomeApiCount42();
  }catch(e){}
 }
-window.addEventListener('load',()=>{updateHomeShellCounts();refreshAiContextBanner42();refreshHomeCloudState43();initAiProviderSelect46();});
+window.addEventListener('load',()=>{updateHomeShellCounts();refreshAiContextBanner42();refreshHomeCloudState43();initAiProviderSelect46();initAiMode48();});
 
 
 const CROSS42_KEY='evSalesActiveContextV42';

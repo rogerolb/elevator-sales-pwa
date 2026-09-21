@@ -2,3 +2,6 @@ project_id = "ev-sales-intelligence"
 
 [functions.health]
 verify_jwt = false
+
+[functions.ai]
+verify_jwt = true
