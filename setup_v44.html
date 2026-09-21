@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EV Sales v4.5 初期設定</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f7fa;color:#18212b;margin:0;padding:20px}
+main{max-width:720px;margin:auto}.box{background:#fff;border:1px solid #d9e1e8;border-radius:16px;padding:18px;margin-bottom:12px}
+h1,h2{color:#123a63}.row{display:grid;grid-template-columns:180px 1fr;gap:8px;margin:9px 0;align-items:center}
+input{width:100%;box-sizing:border-box;border:1px solid #ccd7df;border-radius:9px;padding:10px}
+button,a.btn{display:inline-block;border:0;background:#123a63;color:#fff;border-radius:10px;padding:11px 14px;font-weight:700;text-decoration:none;cursor:pointer}
+pre{white-space:pre-wrap;background:#f5f7f9;border-radius:10px;padding:10px;overflow:auto;font-size:11px}
+.note{color:#667789;font-size:12px;line-height:1.6}.warn{background:#fff7e5;border-left:3px solid #b9872d;padding:9px;border-radius:8px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+</style></head><body><main>
+<div class="box"><h1>初期設定 v4.5</h1><p class="note">Supabaseプロジェクト作成後、ここでブラウザ用設定ファイルを生成します。秘密キーは入力しません。</p></div>
+<div class="box"><h2>1. Supabase</h2>
+<div class="row"><label>Project URL</label><input id="url" placeholder="https://xxxxx.supabase.co"></div>
+<div class="row"><label>Publishable key</label><input id="key" placeholder="sb_publishable_..."></div>
+<div class="row"><label>本番PWA URL</label><input id="site" placeholder="https://example.github.io/ev-sales/"></div>
+<div class="warn note">入力するのはpublishable keyだけです。secret key、OpenAIキー、Googleキーなどは入力しないでください。</div>
+</div>
+<div class="box"><h2>2. Auth URL設定</h2><p class="note">Supabase Dashboard → Authentication → URL Configuration で、Site URLを本番PWA URLに設定し、同じURLをRedirect URLsへ追加します。</p><pre id="redirect">本番PWA URLを入力すると表示します。</pre></div>
+<div class="box"><h2>3. app_config.js生成</h2><button onclick="make()">設定ファイルを生成</button> <button onclick="downloadCfg()">app_config.jsを保存</button><pre id="out"></pre></div>
+<div class="box"><a class="btn" href="connection_check_v44.html">接続診断へ</a> <a class="btn" href="index.html">アプリへ戻る</a></div>
+</main>
+<script>
+function generated(){
+ const u=document.getElementById('url').value.trim(),k=document.getElementById('key').value.trim(),s=document.getElementById('site').value.trim();
+ return `window.APP_CONFIG={
+  supabaseUrl:${JSON.stringify(u)},
+  supabasePublishableKey:${JSON.stringify(k)},
+  storageMode:"local-first",
+  siteUrl:${JSON.stringify(s)},
+  supabaseFunctions:{
+    health:"health",
+    ai:"ai",
+    news:"news",
+    photoIdentify:"photo-identify",
+    enrichment:"enrich-property",
+    facilityMap:"analyze-facility-map",
+    jesSync:""
+  },
+  enrichmentEndpoint:"",
+  facilityMapEndpoint:"",
+  photoIdentifyEndpoint:"",
+  newsEndpoint:"",
+  aiEndpoint:"",
+  jesSyncEndpoint:""
+};
+// Browser-safe settings only. Never place secret keys here.
+`;
+}
+function make(){
+ document.getElementById('out').textContent=generated();
+ const s=document.getElementById('site').value.trim();
+ document.getElementById('redirect').textContent=s?`Site URL: ${s}\nRedirect URL: ${s}`:'本番PWA URLを入力してください。';
+}
+function downloadCfg(){
+ make();const blob=new Blob([generated()],{type:'text/javascript'}),u=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=u;a.download='app_config.js';a.click();URL.revokeObjectURL(u);
+}
+['url','key','site'].forEach(id=>document.getElementById(id).addEventListener('input',make));make();
+</script></body></html>

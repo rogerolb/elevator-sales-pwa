@@ -1,0 +1,12 @@
+(function(){
+ let client=null; function cfg(){return window.APP_CONFIG||{}}
+ function isConfigured(){return !!(cfg().supabaseUrl&&cfg().supabasePublishableKey&&window.supabase?.createClient)}
+ function getClient(){if(!isConfigured())return null;if(!client)client=window.supabase.createClient(cfg().supabaseUrl,cfg().supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return client}
+ async function getUser(){const c=getClient();if(!c)return null;const {data,error}=await c.auth.getUser();if(error)throw error;return data.user||null}
+ async function signInWithOtp(email,redirectTo){const c=getClient();if(!c)throw new Error('Supabase未設定');const {error}=await c.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo}});if(error)throw error}
+ async function signOut(){const c=getClient();if(!c)return;const {error}=await c.auth.signOut();if(error)throw error}
+ async function invokeFunction(name,body){const c=getClient();if(!c)throw new Error('Supabase未設定');const base=String(cfg().supabaseUrl||'').replace(/\/$/,'');const {data:{session}}=await c.auth.getSession();const token=session?.access_token||cfg().supabasePublishableKey;const headers={'apikey':cfg().supabasePublishableKey,'Authorization':`Bearer ${token}`};let fetchBody=body;if(!(body instanceof FormData)){headers['Content-Type']='application/json';fetchBody=JSON.stringify(body??{})}const r=await fetch(`${base}/functions/v1/${encodeURIComponent(name)}`,{method:'POST',headers,body:fetchBody});const text=await r.text();let data;try{data=text?JSON.parse(text):{}}catch(e){data={text}}if(!r.ok)throw new Error(data?.error||data?.message||`HTTP ${r.status}`);return data}
+ async function saveSnapshot(bucket,payload){const c=getClient();if(!c)throw new Error('Supabase未設定');const user=await getUser();if(!user)throw new Error('未ログイン');const {error}=await c.from('user_snapshots').upsert({user_id:user.id,bucket,payload,updated_at:new Date().toISOString()},{onConflict:'user_id,bucket'});if(error)throw error}
+ async function loadSnapshot(bucket){const c=getClient();if(!c)throw new Error('Supabase未設定');const user=await getUser();if(!user)throw new Error('未ログイン');const {data,error}=await c.from('user_snapshots').select('payload,updated_at').eq('user_id',user.id).eq('bucket',bucket).maybeSingle();if(error)throw error;return data?.payload||null}
+ window.EVCloudAdapter={isConfigured,getClient,getUser,signInWithOtp,signOut,invokeFunction,saveSnapshot,loadSnapshot};
+})();

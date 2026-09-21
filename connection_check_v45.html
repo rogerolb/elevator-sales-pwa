@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EV Sales v4.5 接続診断</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./app_config.js"></script><script src="./cloud_adapter.js"></script>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f7fa;color:#18212b;margin:0;padding:20px}
+main{max-width:720px;margin:auto}.box{background:#fff;border:1px solid #d9e1e8;border-radius:16px;padding:18px;margin-bottom:12px}
+h1{color:#123a63}.row{display:grid;grid-template-columns:1fr 100px;gap:8px;padding:10px 0;border-bottom:1px solid #e3e8ec}.ok{color:#245a34;font-weight:800}.ng{color:#9b3d32;font-weight:800}.wait{color:#725400;font-weight:800}
+button,a{display:inline-block;border:0;background:#123a63;color:#fff;border-radius:10px;padding:11px 14px;font-weight:700;text-decoration:none;cursor:pointer}.note{color:#667789;font-size:12px;line-height:1.6}
+</style></head><body><main>
+<div class="box"><h1>接続診断 v4.5</h1><p class="note">設定・認証・DB・Edge Functionを順に確認します。</p><button onclick="run()">診断を実行</button></div>
+<div class="box" id="rows"></div><div class="box"><a href="setup_v45.html">初期設定</a> <a href="index.html">アプリへ戻る</a></div>
+</main><script>
+const rows=document.getElementById('rows');
+function row(name,state,msg){return `<div class="row"><div><b>${name}</b><div class="note">${msg||''}</div></div><div class="${state==='OK'?'ok':state==='NG'?'ng':'wait'}">${state}</div></div>`}
+async function run(){
+ rows.innerHTML=row('設定','確認中','');
+ const a=window.EVCloudAdapter,cfg=window.APP_CONFIG||{};
+ let out=[];
+ if(!a?.isConfigured()){out.push(row('Supabase設定','NG','app_config.jsのURL/publishable keyを設定してください'));rows.innerHTML=out.join('');return}
+ out.push(row('Supabase設定','OK',cfg.supabaseUrl));
+ let user=null;
+ try{user=await a.getUser();out.push(row('Auth',user?'OK':'要ログイン',user?.email||'アプリの管理→クラウド保存・ログインからログインしてください'))}catch(e){out.push(row('Auth','NG',e.message))}
+ if(user){
+  try{await a.loadSnapshot('main');out.push(row('user_snapshots / RLS','OK','自分の行へアクセス可能'))}catch(e){out.push(row('user_snapshots / RLS','NG',e.message))}
+ }else out.push(row('user_snapshots / RLS','未実行','ログイン後に確認'));
+ try{const x=await a.invokeFunction((cfg.supabaseFunctions||{}).health||'health',{});out.push(row('Edge Function health',x.ok?'OK':'NG',JSON.stringify(x)))}catch(e){out.push(row('Edge Function health','NG',e.message))}
+ rows.innerHTML=out.join('');
+}
+run();
+</script></body></html>

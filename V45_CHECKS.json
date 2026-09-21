@@ -1,0 +1,11 @@
+{
+  "version": true,
+  "supabase_url_configured": true,
+  "publishable_key_configured": true,
+  "secret_key_absent": true,
+  "setup_v45": true,
+  "connection_check_v45": true,
+  "migration": true,
+  "health_function": true,
+  "js_syntax": true
+}
