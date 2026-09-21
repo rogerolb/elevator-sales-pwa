@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#123a63"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="EV Sales"><title>Elevator Sales Intelligence v4.5</title>
+<meta name="theme-color" content="#123a63"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="EV Sales"><title>Elevator Sales Intelligence v4.7</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{--navy:#123a63;--blue:#1f5f99;--bg:#f4f7fa;--card:#fff;--text:#18212b;--muted:#667789;--line:#d9e1e8;--green:#1e7a46;--amber:#9a6a00;--red:#a12d2d}
@@ -342,6 +342,19 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 .cloud43-log{max-height:180px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px;margin-top:8px;font-size:9px;line-height:1.55}
 @media(max-width:520px){.cloud43-grid{grid-template-columns:1fr}.cloud43-email{grid-template-columns:1fr}.cloud43-actions{grid-template-columns:1fr}}
 
+
+/* v4.6 multi-AI gateway */
+.ai46-provider{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:9px 0;padding:9px;border:1px solid var(--line);border-radius:10px;background:#fbfdfe}
+.ai46-provider select{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;color:var(--navy)}
+.ai46-badge{display:inline-block;padding:2px 7px;border-radius:99px;background:#e8f1f8;color:#244f72;font-size:9px;font-weight:800}
+.ai46-meta{font-size:9px;color:var(--muted);margin-top:5px}
+.ai46-status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:9px 0}
+.ai46-status-card{border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px}
+.ai46-status-card b{font-size:10px}
+.ai46-on{color:#245a34;font-weight:800}
+.ai46-off{color:#68727c;font-weight:800}
+@media(max-width:520px){.ai46-status-grid{grid-template-columns:1fr}.ai46-provider{grid-template-columns:1fr}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app_config.js"></script>
@@ -464,6 +477,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
     <button class="admin-card" onclick="go('propertyDbAdmin');initPropertyDbAdmin()"><b>保存データ管理</b><small>保存物件・最近見た物件、バックアップ、復元</small></button>
     <button class="admin-card" onclick="go('cloudAdmin');initCloudAdmin43()"><b>クラウド保存・ログイン</b><small>local-first保存、Supabaseログイン、同期、復元</small></button>
     <button class="admin-card" onclick="go('apiStatusAdmin');initApiStatusAdmin()"><b>API・接続状態</b><small>Web補強・写真判定・ニュース・AIなどの接続口を確認</small></button>
+    <button class="admin-card" onclick="go('aiProviderAdmin');initAiProviderAdmin46()"><b>AIプロバイダー</b><small>OpenAI / Claude / Geminiを共通ゲートウェイで切替</small></button>
     <button class="admin-card" onclick="go('researchPromptAdmin');initResearchPromptAdmin()"><b>調査プロンプト</b><small>通常検索・実数深掘り・営業対象ゲートの共通仕様</small></button>
   </div></details>
 
@@ -498,12 +512,16 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 </section>
 
 <section id="cloudAdmin"><button class="back" onclick="go('admin')">← 管理</button>
-<div class="panel"><h2>クラウド保存・ログイン v4.3</h2>
+<div class="panel"><h2>クラウド保存・ログイン v4.7</h2>
 <div id="cloudAdminBody"></div>
 </div></section>
 
+<section id="aiProviderAdmin"><button class="back" onclick="go('admin')">← 管理</button>
+<div class="panel"><h2>AIプロバイダー v4.7</h2><div id="aiProviderAdminBody"></div></div>
+</section>
+
 <section id="apiStatusAdmin"><button class="back" onclick="go('admin')">← 管理</button>
-<div class="panel"><h2>API・接続状態 v4.2</h2><div id="apiStatusAdminBody"></div></div>
+<div class="panel"><h2>API・接続状態 v4.6</h2><div id="apiStatusAdminBody"></div></div>
 </section>
 
 <section id="searchSchemeAdmin"><button class="back" onclick="go('admin')">← 管理</button>
@@ -602,7 +620,12 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 
 <section id="ai"><button class="back" onclick="go('home')">← HOME</button>
 <div class="panel"><h2>AIに聞く</h2>
-<div class="meta">参照する情報を選んで、そのまま質問します。</div><div id="aiActiveContext42" class="context42">参照中の物件なし</div>
+<div class="meta">参照する情報を選んで、そのまま質問します。</div>
+<div class="ai46-provider"><div><b>使用AI</b><div class="ai46-meta">「自動」はSupabase側の既定AIを使用します。</div></div>
+<select id="aiProviderSelect46" onchange="saveAiProvider46(this.value)">
+<option value="auto">自動</option><option value="openai">OpenAI</option><option value="anthropic">Claude</option><option value="gemini">Gemini</option><option value="deepseek">DeepSeek API</option><option value="deepseek_web">DeepSeek 指定チャット</option>
+</select></div>
+<div id="aiActiveContext42" class="context42">参照中の物件なし</div>
 <div class="ai-contexts">
  <button class="selected" data-ai-context="物件" onclick="toggleAiContext(this)">物件</button>
  <button class="selected" data-ai-context="保守会社" onclick="toggleAiContext(this)">保守会社</button>
@@ -673,12 +696,89 @@ async function selectNewsCategory(btn,cat){
 }
 function toggleAiContext(btn){btn.classList.toggle('selected')}
 function fillAiPrompt(text){const e=document.getElementById('aiShellInput');if(e){e.value=text;e.focus()}}
+
+const AI46_PROVIDER_KEY='evSalesAiProviderV46';
+function getAiProvider46(){try{return localStorage.getItem(AI46_PROVIDER_KEY)||'auto'}catch(e){return 'auto'}}
+function saveAiProvider46(v){try{localStorage.setItem(AI46_PROVIDER_KEY,v||'auto')}catch(e){}}
+function initAiProviderSelect46(){
+ const el=document.getElementById('aiProviderSelect46');if(el)el.value=getAiProvider46();
+}
+function aiProviderLabel46(p){return ({openai:'OpenAI',anthropic:'Claude',gemini:'Gemini',deepseek:'DeepSeek API',deepseek_web:'DeepSeek 指定チャット',auto:'自動'})[p]||p||'不明'}
+async function getAiGatewayStatus46(){
+ try{
+  const fn=backend44FunctionName('ai'), a=cloud43Adapter();
+  if(!fn||!a?.isConfigured())return {ok:false,error:'AI Edge Function未設定'};
+  return await a.invokeFunction(fn,{action:'status'});
+ }catch(e){return {ok:false,error:e.message}}
+}
+async function initAiProviderAdmin46(){
+ const el=document.getElementById('aiProviderAdminBody');if(!el)return;
+ el.innerHTML='<div class="empty">AIゲートウェイ状態を確認中...</div>';
+ const s=await getAiGatewayStatus46();
+ if(!s.ok){
+  el.innerHTML=`<div class="shell-offline">${esc(s.error||'AIゲートウェイ未接続')}</div>
+  <div class="note">PWA側は準備済みです。Supabase Edge Function「ai」を配置し、SecretsへAIキーを設定すると有効になります。</div>`;
+  return;
+ }
+ const ps=s.providers||{};
+ el.innerHTML=`<div class="cloud43"><b>共通AIゲートウェイ</b>
+ <div class="meta">既定=${esc(aiProviderLabel46(s.defaultProvider||'不明'))} / v${esc(s.gatewayVersion||'')}</div>
+ <div class="ai46-status-grid">
+ ${['openai','anthropic','gemini','deepseek'].map(p=>`<div class="ai46-status-card"><b>${esc(aiProviderLabel46(p))}</b><div class="${ps[p]?.configured?'ai46-on':'ai46-off'}">${ps[p]?.configured?'設定済':'未設定'}</div><div class="ai46-meta">${esc(ps[p]?.model||'モデル未設定')}</div></div>`).join('')}
+ </div>
+ <div class="v25-sub">DeepSeek 指定チャット</div>
+ <div class="cloud43-email"><input id="deepSeekChatUrl47" placeholder="https://chat.deepseek.com/..." value="${esc(getDeepSeekChatUrl47())}"><button class="btn" onclick="saveDeepSeekChatUrl47(document.getElementById('deepSeekChatUrl47').value);alert('保存しました')">URL保存</button></div>
+ <div class="note">このURLは端末内だけに保存します。APIなしの場合、質問文をコピーして指定チャットを開く方式です。Webチャットへの自動送信は行いません。</div>
+ <div class="note">AIキーはブラウザに保存しません。Supabase Edge Function Secretsだけで管理します。</div>
+ </div>`;
+}
+
+
+const AI47_DEEPSEEK_CHAT_URL_KEY='evSalesDeepSeekChatUrlV47';
+function getDeepSeekChatUrl47(){try{return localStorage.getItem(AI47_DEEPSEEK_CHAT_URL_KEY)||''}catch(e){return ''}}
+function saveDeepSeekChatUrl47(v){try{localStorage.setItem(AI47_DEEPSEEK_CHAT_URL_KEY,String(v||'').trim())}catch(e){}}
+function buildDeepSeekHandoffPrompt47(q,contexts,ctx){
+ return [
+   '以下はエレベーター営業支援の相談です。',
+   '事実・推定・不明を分け、推定には（推定）を付けてください。',
+   '',
+   `質問: ${q}`,
+   `参照カテゴリ: ${contexts.join(' / ')||'指定なし'}`,
+   `物件コンテキスト: ${JSON.stringify(ctx||{})}`,
+   '',
+   '回答は「確認できていること」「推定」「営業上の次の一手」に分けてください。'
+ ].join('\n');
+}
+async function deepSeekWebHandoff47(q,contexts,ctx,conv){
+ const url=getDeepSeekChatUrl47();
+ if(!url){
+   conv.innerHTML+=`<div class="chat"><b>DeepSeek指定チャット未設定</b><br><span class="meta">管理 → AIプロバイダー でDeepSeekチャットURLを登録してください。</span></div>`;
+   return;
+ }
+ const prompt=buildDeepSeekHandoffPrompt47(q,contexts,ctx);
+ try{
+   await navigator.clipboard.writeText(prompt);
+   window.open(url,'_blank','noopener,noreferrer');
+   conv.innerHTML+=`<div class="chat"><b>DeepSeekへ引き継ぎ</b><br>質問文をコピーして指定チャットを開きました。DeepSeek側で貼り付けて送信してください。</div>`;
+ }catch(e){
+   conv.innerHTML+=`<div class="chat"><b>DeepSeekへ引き継ぎ</b><br>指定チャットを開きます。下の質問文をコピーして送信してください。<br><br>${esc(prompt).replace(/\n/g,'<br>')}</div>`;
+   window.open(url,'_blank','noopener,noreferrer');
+ }
+}
+
 async function sendAiShell(){
  const input=document.getElementById('aiShellInput'), conv=document.getElementById('aiShellConversation');
  const q=(input?.value||'').trim(); if(!q||!conv)return;
  const contexts=[...document.querySelectorAll('[data-ai-context].selected')].map(x=>x.dataset.aiContext);
  conv.innerHTML+=`<div class="chat" style="background:#fff"><b>質問</b><br>${esc(q)}</div>`;
  input.value='';
+ const selectedProvider=getAiProvider46();
+ if(selectedProvider==='deepseek_web'){
+   await deepSeekWebHandoff47(q,contexts,getCross42Context(),conv);
+   input.value='';
+   conv.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+   return;
+ }
  const direct=api42Endpoint('aiEndpoint'), fn=backend44FunctionName('ai');
  if(!direct&&!fn){
   conv.innerHTML+=`<div class="chat"><b>AI接続前</b><br>参照予定：${contexts.length?contexts.map(esc).join(' / '):'指定なし'}<br><span class="meta">本番API接続後、ここに回答を表示します。</span></div>`;
@@ -686,8 +786,9 @@ async function sendAiShell(){
  }
  const wait=document.createElement('div');wait.className='chat';wait.textContent='AI回答中...';conv.appendChild(wait);
  try{
-  const x=await backend44Json('ai',{question:q,contexts,activeProperty:getCross42Context()});
-  wait.innerHTML=`<b>AI</b><br>${esc(x.answer||x.text||'回答なし').replace(/\n/g,'<br>')}`;
+  const x=await backend44Json('ai',{action:'ask',question:q,contexts,activeProperty:getCross42Context(),provider:getAiProvider46()});
+  const who=aiProviderLabel46(x.provider||getAiProvider46()), model=x.model?` / ${esc(x.model)}`:'';
+  wait.innerHTML=`<b>AI <span class="ai46-badge">${esc(who)}${model}</span></b><br>${esc(x.answer||x.text||'回答なし').replace(/\n/g,'<br>')}`;
  }catch(e){wait.innerHTML=`<b>AI接続エラー</b><br>${esc(e.message)}`}
  conv.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -706,7 +807,7 @@ function updateHomeShellCounts(){
    updateHomeApiCount42();
  }catch(e){}
 }
-window.addEventListener('load',()=>{updateHomeShellCounts();refreshAiContextBanner42();refreshHomeCloudState43();});
+window.addEventListener('load',()=>{updateHomeShellCounts();refreshAiContextBanner42();refreshHomeCloudState43();initAiProviderSelect46();});
 
 
 const CROSS42_KEY='evSalesActiveContextV42';
