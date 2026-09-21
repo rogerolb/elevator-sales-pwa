@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#123a63"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="EV Sales"><title>Elevator Sales Intelligence v4.9</title>
+<meta name="theme-color" content="#123a63"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="EV Sales"><title>Elevator Sales Intelligence v4.10</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{--navy:#123a63;--blue:#1f5f99;--bg:#f4f7fa;--card:#fff;--text:#18212b;--muted:#667789;--line:#d9e1e8;--green:#1e7a46;--amber:#9a6a00;--red:#a12d2d}
@@ -528,7 +528,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 </div></section>
 
 <section id="aiProviderAdmin"><button class="back" onclick="go('admin')">← 管理</button>
-<div class="panel"><h2>AIプロバイダー v4.9</h2><div id="aiProviderAdminBody"></div></div>
+<div class="panel"><h2>AIプロバイダー v4.10</h2><div id="aiProviderAdminBody"></div></div>
 </section>
 
 <section id="apiStatusAdmin"><button class="back" onclick="go('admin')">← 管理</button>
@@ -636,10 +636,10 @@ nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid
 <select id="aiProviderSelect46" onchange="saveAiProvider46(this.value)">
 <option value="auto">自動</option><option value="openai">OpenAI API</option><option value="anthropic">Claude API</option><option value="gemini">Gemini API</option><option value="deepseek">DeepSeek API</option>
 </select></div>
-<div class="ai48-mode"><div><b>分析モード</b><div class="ai46-meta">台数推定では検索プロンプト v2.6 を自動付与します。</div></div>
+<div class="ai48-mode"><div><b>分析モード</b><div class="ai46-meta">台数推定では検索プロンプト v2.7 を自動付与します。</div></div>
 <select id="aiModeSelect48" onchange="saveAiMode48(this.value)">
 <option value="normal">通常会話</option>
-<option value="estimation">台数推定・削減効果 v2.6</option>
+<option value="estimation">台数推定・削減効果 v2.7</option>
 </select></div>
 <div id="aiActiveContext42" class="context42">参照中の物件なし</div>
 <div class="ai-contexts">
@@ -767,7 +767,7 @@ async function initAiProviderAdmin46(){
 
 const AI48_MODE_KEY='evSalesAiModeV48';
 const AI48_WEB_URLS_KEY='evSalesWebAiUrlsV48';
-const AI48_RESEARCH_PROMPT="# 役割\nあなたは「日本国内の昇降機（エレベーター・エスカレーター・小荷物昇降機）の台数推定アナリスト」です。\n\n# 目的\n保守営業が予測を持ち、削減目安を持って提案できるようにすること。\n\n# 対象\n指定された地域・用途・建物種別、または企業名・法人名・施設名における昇降機の推定台数を、以下の3分類で算出すること。\n- エレベーター（EV）\n- エスカレーター（ES）\n- 小荷物昇降機（DW）\n\n# 出力フォーマット\n必ず以下の形式を基本とすること。\n\n法人名：●\n拠点名①：EV●～●台・ES●～●台・DW●～●台\n拠点名②：EV●～●台・ES●～●台・DW●～●台\n拠点名③：EV●～●台・ES●～●台・DW●～●台\n合計：EV●～●台・ES●～●台・DW●～●台\n\n削減効果（保守）\n　年間：●万円\n　10年：●万円\n\n削減効果（リニューアル実施）\n　年間：●万円\n\n※台数は最小～最大のレンジで示し、削減効果は中央値で算出する。\n※確定値が入手できた場合は、その値を優先し、備考に「確定」と明記する。\n※対象が単一施設で法人名が特定できない場合は「法人名：不明」とする。\n\n# 算出基準（保守削減：月額×12ヶ月）\n- EV：5.0→2.5万円／月 → 年間30.0万円削減／台\n- ES：8.0→4.0万円／月 → 年間48.0万円削減／台\n- DW：2.0→1.0万円／月 → 年間12.0万円削減／台\n\n# 算出基準（リニューアル実施：年間削減額）\n- EV：2000→1000万円／年 → 年間1,000万円削減／台\n- DW：1000→500万円／年 → 年間500万円削減／台\n- ES：単価未定義のため原則計上しない\n\n# 必ず含める4項目\n① 推定台数\n② 推定根拠\n③ 誤差要因\n④ 追加で必要なデータ\n\n# 推定の進め方\n1. 企業・法人の拠点リストを作成する（有報、公式サイト、登記情報など）。\n2. 各拠点の建物用途・規模・階数を推定する。\n3. 公開情報（公式フロアマップ、バリアフリーマップ、物件情報、管理台帳など）を確認する。\n4. 一次情報（公式フロアマップ、管理台帳、保守契約書、メーカー公表設備事例）を最優先する。\n5. 二次情報や検索スニペットのみで「0台」と断定しない。データの目的・特性を考慮する。\n6. 大型商業施設・病院・大学などは物理的・業界的なサニティチェックを行う。ただしサニティチェックは公式・実測値を上書きせず、矛盾時は「再調査フラグ」とする。\n7. 確定値が得られた場合は、その値を採用し、推定レンジを更新する。\n\n# 情報状態\n数値は可能な限り以下を区別する。\n- 確認実数\n- 公開下限\n- 法定最低\n- 推定\n- 不明\n\n# 出典確度\n- A：行政資料、施設設備一覧、メーカー公表設備事例、保守契約書など\n- B：施設公式サイト、公式フロアマップ、公式バリアフリー資料\n- C：係数、類似事例、参考Web、AI推論\n\n# EVの数え方\n- 非常用仕様EVは物理総台数への加算ではなく内数。二重計上しない。\n- 公式マップのEV記号は、シャフト・バンク・個別号機を確認するまで「記号数＝物理台数」としない。\n- 公式マップが全設備を網羅すると確認できない場合、見える台数は「公開下限」とする。\n\n# DW\n- 公開情報が乏しい場合は「不明」または「推定」とし「要ヒアリング」を付ける。\n\n# 注意事項\n- 公式データがないからといって保守的になりすぎず、透明性の高い前提を置いてレンジを出す。\n- ただし空欄を埋めるために数字を創作しない。\n- 誤差要因と追加データを必ず明示する。\n- ユーザーから訂正があった場合は分析を修正し、誤判断の原因と再発防止策を述べる。\n";
+const AI48_RESEARCH_PROMPT="# 役割\nあなたは「日本国内の昇降機（エレベーター・エスカレーター・小荷物昇降機）の台数推定アナリスト」です。\n\n# 目的\n保守営業が予測を持ち、削減目安を持って提案できるようにすること。\n\n# 対象\n指定された地域・用途・建物種別、または企業名・法人名・施設名における昇降機の推定台数を、以下の3分類で算出すること。\n- エレベーター（EV）\n- エスカレーター（ES）\n- 小荷物昇降機（DW）\n\n# 出力フォーマット\n必ず以下の形式を基本とすること。\n\n法人名：●\n拠点名①：EV●～●台・ES●～●台・DW●～●台\n拠点名②：EV●～●台・ES●～●台・DW●～●台\n拠点名③：EV●～●台・ES●～●台・DW●～●台\n合計：EV●～●台・ES●～●台・DW●～●台\n\n削減効果（保守）\n　年間：●万円\n　10年：●万円\n\n削減効果（リニューアル実施）\n　年間：●万円\n\n※台数は最小～最大のレンジで示し、削減効果は中央値で算出する。\n※確定値が入手できた場合は、その値を優先し、備考に「確定」と明記する。\n※対象が単一施設で法人名が特定できない場合は「法人名：不明」とする。\n\n# 算出基準（保守削減：月額×12ヶ月）\n- EV：5.0→2.5万円／月 → 年間30.0万円削減／台\n- ES：8.0→4.0万円／月 → 年間48.0万円削減／台\n- DW：2.0→1.0万円／月 → 年間12.0万円削減／台\n\n# 算出基準（リニューアル実施：年間削減額）\n- EV：2000→1000万円／年 → 年間1,000万円削減／台\n- DW：1000→500万円／年 → 年間500万円削減／台\n- ES：単価未定義のため原則計上しない\n\n# 必ず含める4項目\n① 推定台数\n② 推定根拠\n③ 誤差要因\n④ 追加で必要なデータ\n\n# 推定の進め方\n1. 企業・法人の拠点リストを作成する（有報、公式サイト、登記情報など）。\n2. 各拠点の建物用途・規模・階数を推定する。\n3. 公開情報（公式フロアマップ、バリアフリーマップ、物件情報、管理台帳など）を確認する。\n4. 一次情報（公式フロアマップ、管理台帳、保守契約書、メーカー公表設備事例）を最優先する。\n5. 二次情報や検索スニペットのみで「0台」と断定しない。データの目的・特性を考慮する。\n6. 大型商業施設・病院・大学などは物理的・業界的なサニティチェックを行う。ただしサニティチェックは公式・実測値を上書きせず、矛盾時は「再調査フラグ」とする。\n7. 確定値が得られた場合は、その値を採用し、推定レンジを更新する。\n\n# 情報状態\n数値は可能な限り以下を区別する。\n- 確認実数\n- 公開下限\n- 法定最低\n- 推定\n- 不明\n\n# 出典確度\n- A：行政資料、施設設備一覧、メーカー公表設備事例、保守契約書など\n- B：施設公式サイト、公式フロアマップ、公式バリアフリー資料\n- C：係数、類似事例、参考Web、AI推論\n\n# EVの数え方\n- 非常用仕様EVは物理総台数への加算ではなく内数。二重計上しない。\n- 公式マップのEV記号は、シャフト・バンク・個別号機を確認するまで「記号数＝物理台数」としない。\n- 公式マップが全設備を網羅すると確認できない場合、見える台数は「公開下限」とする。\n\n# DW\n- 公開情報が乏しい場合は「不明」または「推定」とし「要ヒアリング」を付ける。\n- 飲食施設や厨房があるという理由だけでDWの存在を断定しない。\n- 根拠不足の場合は最小値を恣意的に1以上へ上げない。\n\n# 算術・重複チェック（必須）\n- 拠点別レンジの最小値・最大値を最後に再計算し、合計値と完全一致させる。\n- 削減額は、合計レンジの中央値から再計算する。\n- 同一設備を棟・駐車場・エリア間で二重計上しない。\n- 拠点内訳と合計が一致しない場合は、そのまま出力せず再計算する。\n- ESを「0台」とする場合も一次情報または明確な構造根拠が必要。確認できない場合は「不明」または「0～●台」とする。\n\n# 証拠ルール（必須）\n- 「確定」「確認済み」と記載する数値には、資料名・URL・資料種別のいずれかを併記する。\n- 出典を再確認できない場合は「確定」「確認済み」と表記しない。\n- 検索結果のスニペットのみで具体的な台数・メーカー・機種を確定しない。\n- 一次情報と二次情報が矛盾する場合は一次情報を優先し、矛盾内容を明記する。\n\n# 注意事項\n- 公式データがないからといって保守的になりすぎず、透明性の高い前提を置いてレンジを出す。\n- ただし空欄を埋めるために数字を創作しない。\n- 誤差要因と追加データを必ず明示する。\n- ユーザーから訂正があった場合は分析を修正し、誤判断の原因と再発防止策を述べる。\n";
 
 function getAiMode48(){try{return localStorage.getItem(AI48_MODE_KEY)||'normal'}catch(e){return 'normal'}}
 function saveAiMode48(v){try{localStorage.setItem(AI48_MODE_KEY,v||'normal')}catch(e){}}
@@ -842,7 +842,7 @@ async function sendAiShell(){
  }
  const wait=document.createElement('div');wait.className='chat';wait.textContent='AI回答中...';conv.appendChild(wait);
  try{
-  const x=await backend44Json('ai',{action:'ask',question:q,contexts,activeProperty:getCross42Context(),provider:getAiProvider46(),analysisMode:getAiMode48(),researchPromptVersion:'2.6'});
+  const x=await backend44Json('ai',{action:'ask',question:q,contexts,activeProperty:getCross42Context(),provider:getAiProvider46(),analysisMode:getAiMode48(),researchPromptVersion:'2.7'});
   const who=aiProviderLabel46(x.provider||getAiProvider46()), model=x.model?` / ${esc(x.model)}`:'';
   wait.innerHTML=`<b>AI <span class="ai46-badge">${esc(who)}${model}</span></b><br>${esc(x.answer||x.text||'回答なし').replace(/\n/g,'<br>')}`;
  }catch(e){wait.innerHTML=`<b>AI接続エラー</b><br>${esc(e.message)}`}
